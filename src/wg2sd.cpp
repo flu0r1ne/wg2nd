@@ -208,6 +208,16 @@ namespace wg2sd {
 					}
 
 					cfg.intf.listen_port = port;
+				} else if (key == "PreUp") {
+					cfg.intf.preup = value;
+				} else if (key == "PostUp") {
+					cfg.intf.postup = value;
+				} else if (key == "PreDown") {
+					cfg.intf.predown = value;
+				} else if (key == "PostDown") {
+					cfg.intf.postdown = value;
+				} else if (key == "SaveConfig") {
+					cfg.intf.save_config = value;
 				} else {
 					throw ParsingException("Invalid key in [Interface] section: " + key, line_no);
 				}
@@ -485,6 +495,23 @@ namespace wg2sd {
 
 		std::string private_keyfile = hashed_keyfile_name(cfg.intf.private_key);
 
+		std::vector<std::string> warnings;
+
+#define WarnOnIntfField(field_, field_name) \
+if(!cfg.intf.field_.empty()) { \
+	warnings.push_back("[Interface] section contains a field \"" field_name "\" which does not have a systemd-networkd analog, omitting"); \
+}
+
+		WarnOnIntfField(preup, "PreUp")
+		WarnOnIntfField(postup, "PostUp")
+		WarnOnIntfField(predown, "PreDown")
+		WarnOnIntfField(postdown, "PostDown")
+		WarnOnIntfField(save_config, "SaveConfig")
+
+		if(!cfg.intf.preup.empty()) {
+			warnings.push_back("[Interface] section contains a field \"PreUp\" which does not have a systemd-networkd analog");
+		}
+
 		return SystemdConfig {
 			.netdev = {
 				.name = cfg.intf.name + ".netdev",
@@ -498,7 +525,8 @@ namespace wg2sd {
 				.name = private_keyfile,
 				.contents = cfg.intf.private_key + "\n",
 			},
-			.symmetric_keyfiles = std::move(symmetric_keyfiles)
+			.symmetric_keyfiles = std::move(symmetric_keyfiles),
+			.warnings = std::move(warnings)
 		};
 	}
 

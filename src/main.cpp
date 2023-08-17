@@ -190,6 +190,10 @@ int main(int argc, char ** argv) {
 		output_path = std::filesystem::absolute(output_path);
 	}
 
+	for(std::string const & warning : cfg.warnings) {
+		err("warning: %s", warning.c_str());
+	}
+
 	write_systemd_file(cfg.netdev, output_path, false);
 	write_systemd_file(cfg.network, output_path, false);
 	write_systemd_file(cfg.private_keyfile, output_path, true);

@@ -33,6 +33,10 @@ namespace wg2sd {
 		// ListenPort=...
 		// The port number on which the interface will listen
 		std::optional<uint16_t> listen_port;
+		// PreUp, PostUp, PreDown PostDown
+		std::string preup, postup, predown, postdown;
+		// SaveConfig
+		std::string save_config;
 
 		Interface()
 			: should_create_routes { false }
@@ -121,6 +125,8 @@ namespace wg2sd {
 		SystemdFilespec network;
 		SystemdFilespec private_keyfile;
 		std::vector<SystemdFilespec> symmetric_keyfiles;
+
+		std::vector<std::string> warnings;
 	};
 
 	std::string interface_name_from_filename(std::filesystem::path config_path);
