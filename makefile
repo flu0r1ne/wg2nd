@@ -14,7 +14,8 @@ CXXFLAGS = -Wall -Wextra -Werror
 CXXFLAGS += -Isrc -std=c++20 -Wno-unused-function
 
 # Release flags
-RELEASE_FLAGS = -O3 -lrt
+RELEASE_CXXFLAGS = -O3
+RELEASE_LDFLAGS = -lrt
 
 # Debug flags
 DEBUGFLAGS = -ggdb -O0
@@ -43,7 +44,8 @@ DEBUG_OBJ_DIR = obj/debug
 CMD = wg2sd
 
 # Build rules
-all: CXXFLAGS += $(RELEASE_FLAGS)
+all: CXXFLAGS += $(RELEASE_CXXFLAGS)
+all: LDFLAGS += $(RELEASE_LDFLAGS)
 all: targets
 
 targets: $(CMD)
