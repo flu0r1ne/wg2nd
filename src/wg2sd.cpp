@@ -307,6 +307,10 @@ namespace wg2sd {
 
 		netdev << private_keyfile << "\n";
 
+		if(cfg.intf.listen_port.has_value()) {
+			netdev << "ListenPort = " << cfg.intf.listen_port.value() << "\n";
+		}
+
 		if(cfg.intf.should_create_routes and cfg.intf.table != 0) {
 			netdev << "RouteTable = ";
 
@@ -333,9 +337,11 @@ namespace wg2sd {
 
 		for(Peer const & peer : cfg.peers) {
 			netdev << "[WireGuardPeer]\n";
-
-			netdev << "Endpoint = " << peer.endpoint << "\n";
 			netdev << "PublicKey = " << peer.public_key << "\n";
+
+			if(!peer.endpoint.empty()) {
+				netdev << "Endpoint = " << peer.endpoint << "\n";
+			}
 
 			if(!peer.preshared_key.empty()) {
 				std::string filename = hashed_keyfile_name(peer.preshared_key);
