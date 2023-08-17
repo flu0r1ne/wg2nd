@@ -1,3 +1,11 @@
+ifeq ($(PREFIX),)
+	PREFIX := /usr/local
+endif
+
+ifeq ($(BINDIR),)
+	BINDIR := /sbin
+endif
+
 # Compiler
 CXX = g++
 
@@ -32,13 +40,13 @@ OBJ_DIR = obj
 DEBUG_OBJ_DIR = obj/debug
 
 # Target executable
-TARGET = wg2sd
+CMD = wg2sd
 
 # Build rules
 all: CXXFLAGS += $(RELEASE_FLAGS)
 all: targets
 
-targets: $(TARGET)
+targets: $(CMD)
 
 tests: $(TEST_TARGETS)
 
@@ -46,7 +54,7 @@ debug: CXXFLAGS += $(DEBUGFLAGS)
 debug: OBJ_DIR = $(DEBUG_OBJ_DIR)
 debug: tests targets
 
-$(TARGET): $(addprefix $(OBJ_DIR)/, $(OBJECTS))
+$(CMD): $(addprefix $(OBJ_DIR)/, $(OBJECTS))
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
@@ -58,16 +66,27 @@ $(TEST_DIR)/%: $(TEST_DIR)/%.cpp $(addprefix $(OBJ_DIR)/, wg2sd.o) | $(OBJ_DIR)
 $(OBJ_DIR) $(DEBUG_OBJ_DIR):
 	mkdir -p $@
 
+install:
+	mkdir -p $(DESTDIR)$(PREFIX)$(BINDIR)/
+	install -m 755 $(CMD) $(DESTDIR)$(PREFIX)$(BINDIR)/
+
+uninstall:
+	rm -rf $(DESTDIR)$(PREFIX)$(BINDIR)/$(CMD)
+
 # Clean rule
 clean:
 	rm -rf $(OBJ_DIR) $(DEBUG_OBJ_DIR) $(TARGET) $(TEST_TARGETS)
+
+.PHONY: install uninstall all clean targets tests
 
 # Help rule
 help:
 	@echo "Available targets:"
 	@echo "  all (default)   : Build the project"
-	@echo "  release         : Build the project with release flags"
 	@echo "  tests           : Build the tests"
 	@echo "  debug           : Build the project and tests with debug flags"
 	@echo "  clean           : Remove all build artifacts"
+	@echo "  install         : install build executables"
+	@echo "  uninstall       : uninstall build executables"
 	@echo "  help            : Display this help message"
+
