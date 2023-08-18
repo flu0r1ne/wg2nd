@@ -127,6 +127,7 @@ namespace wg2sd {
 		std::vector<SystemdFilespec> symmetric_keyfiles;
 
 		std::vector<std::string> warnings;
+		std::string firewall;
 	};
 
 	std::string interface_name_from_filename(std::filesystem::path config_path);

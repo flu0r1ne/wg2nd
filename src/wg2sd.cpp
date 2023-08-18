@@ -6,6 +6,7 @@
 #include <regex>
 
 #include <argon2.h>
+#include <string_view>
 
 std::string hashed_keyfile_name(std::string const & priv_key) {
 	constexpr uint8_t const SALT[] = {
@@ -68,6 +69,16 @@ namespace wg2sd {
 		static std::regex ipv4("\\d{1,3}(\\.\\d{1,3}){0,3}(\\/\\d{1,2})?");
 
 		return std::regex_match(cidr, ipv4);
+	}
+
+	std::string_view _get_addr(std::string_view const & cidr) {
+		size_t suffix = cidr.rfind('/');
+
+		if(suffix == std::string::npos) {
+			return cidr;
+		} else {
+			return cidr.substr(0, suffix);
+		}
 	}
 
 	constexpr uint32_t MAIN_TABLE = 254;
@@ -290,6 +301,55 @@ namespace wg2sd {
 #undef MissingField
 
 		return cfg;
+	}
+
+	static void _write_table(std::stringstream & firewall, Config const & cfg, std::vector<std::string_view> addrs, bool ipv4) {
+		char const * ip = ipv4 ? "ip" : "ip6";
+
+		firewall << "table " << ip << " " << cfg.intf.name << " {\n"
+		         << "  chain preraw {\n"
+		         << "    type filter hook prerouting priority raw; policy accept;\n";
+
+		for(std::string_view const & addr : addrs) {
+			firewall << "    iifname != \"" << cfg.intf.name << "\" " << ip << " daddr " << addr << " fib saddr type != local drop;\n";
+		}
+
+		firewall << "  }\n"
+		         << "\n"
+		         << "  chain premangle {\n"
+		         << "    type filter hook prerouting priority mangle; policy accept;\n"
+		         << "    meta l4proto udp meta mark set ct mark;\n"
+		         << "  }\n"
+		         << "\n"
+		         << "  chain postmangle {\n"
+		         << "    type filter hook postrouting priority mangle; policy accept;\n"
+		         << "    meta l4proto udp meta mark " << std::hex << cfg.intf.table << std::dec << "ct mark set meta mark;\n"
+		         << "  }\n"
+		         << "}\n";
+		
+	}
+
+	std::string _gen_nftables_firewall(Config const & cfg) {
+		std::stringstream firewall;
+
+		std::vector<std::string_view> ipv4_addrs;
+		std::vector<std::string_view> ipv6_addrs;
+
+		for(std::string const & addr : cfg.intf.addresses) {
+			if(_is_ipv4_route(addr)) {
+				ipv4_addrs.push_back(_get_addr(addr));
+			} else {
+				ipv6_addrs.push_back(_get_addr(addr));
+			}
+		}
+
+		_write_table(firewall, cfg, ipv4_addrs, true);
+
+		firewall << "\n";
+
+		_write_table(firewall, cfg, ipv6_addrs, false);
+
+		return firewall.str();
 	}
 
 	static std::string _gen_netdev_cfg(Config const & cfg, uint32_t fwd_table, std::string const & private_keyfile,
@@ -526,7 +586,8 @@ if(!cfg.intf.field_.empty()) { \
 				.contents = cfg.intf.private_key + "\n",
 			},
 			.symmetric_keyfiles = std::move(symmetric_keyfiles),
-			.warnings = std::move(warnings)
+			.warnings = std::move(warnings),
+			.firewall = _gen_nftables_firewall(cfg),
 		};
 	}
 

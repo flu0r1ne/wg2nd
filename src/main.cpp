@@ -89,10 +89,11 @@ void err(char const * format, ...) {
 }
 
 void print_help(char const * prog) {
-	err("Usage: %s [ -o OUTPUT_PATH ] CONFIG_FILE", prog);
+	err("Usage: %s [ -h | -f | -o OUTPUT_PATH ] CONFIG_FILE", prog);
 	err("Options:");
 	err("-o OUTPUT_PATH\tSet the output path (default is /etc/systemd/network)");
-	err("-h\t\tDisplay this help message");
+	err("-f            \tOutput firewall rules");
+	err("-h            \tDisplay this help message");
 	exit(EXIT_SUCCESS);
 }
 
@@ -144,11 +145,15 @@ void write_systemd_file(SystemdFilespec const & filespec, std::string output_pat
 int main(int argc, char ** argv) {
 	int opt;
 	std::filesystem::path output_path = "/etc/systemd/network";
+	bool print_firewall_rules = false;
 
-	while ((opt = getopt(argc, argv, "o:h")) != -1) {
+	while ((opt = getopt(argc, argv, "o:fh")) != -1) {
 		switch (opt) {
 			case 'o':
 				output_path = optarg;
+				break;
+			case 'f':
+				print_firewall_rules = true;
 				break;
 			case 'h':
 				print_help(argv[0]);
@@ -184,6 +189,12 @@ int main(int argc, char ** argv) {
 			die("configuration error: %s", cex.what());
 		}
 
+	}
+
+	if(print_firewall_rules) {
+		fprintf(stdout, "%s", cfg.firewall.c_str());
+
+		return 0;
 	}
 
 	if(!std::filesystem::path(output_path).is_absolute()) {
