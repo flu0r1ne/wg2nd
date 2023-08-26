@@ -67,7 +67,7 @@ and installing it in `/etc/systemd/network/`, execute the following commands:
 wg2nd install /etc/wireguard/wg0.conf
 
 # Append firewall rules to nft(8)
-wg2nd generate -t nft /etc/wireguard/wg0.conf >> /etc/nft.conf
+wg2nd generate -t nft /etc/wireguard/wg0.conf >> /etc/nftables.conf
 
 # Activate the network interface
 networkctl up wg0
