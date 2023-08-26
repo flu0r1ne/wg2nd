@@ -9,7 +9,7 @@
 
 #include <cstdint>
 
-namespace wg2sd {
+namespace wg2nd {
 
 	struct Interface {
 		// File name, or defaults to "wg"
@@ -134,8 +134,14 @@ namespace wg2sd {
 
 	Config parse_config(std::string const & interface_name, std::istream & stream);
 
-	SystemdConfig gen_systemd_config(Config const & cfg, std::string const & output_path);
+	SystemdConfig gen_systemd_config(
+		Config const & cfg,
+		std::filesystem::path const & keyfile_or_output_path,
+		std::optional<std::string> const & filename
+	);
 
-	SystemdConfig wg2sd(std::string const & interface_name, std::istream & stream, std::string const & output_path);
+	SystemdConfig wg2nd(std::string const & interface_name, std::istream & stream,
+		std::filesystem::path const & keyfile_or_output_path,
+		std::optional<std::string> const & filename);
 
 };

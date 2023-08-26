@@ -24,7 +24,7 @@ DEBUGFLAGS = -ggdb -O0
 LDFLAGS = -largon2
 
 # Object files
-OBJECTS := wg2sd.o
+OBJECTS := wg2nd.o
 OBJECTS += main.o
 
 # Source directory
@@ -41,7 +41,7 @@ OBJ_DIR = obj
 DEBUG_OBJ_DIR = obj/debug
 
 # Target executable
-CMD = wg2sd
+CMD = wg2nd
 
 # Build rules
 all: CXXFLAGS += $(RELEASE_CXXFLAGS)
@@ -62,7 +62,7 @@ $(CMD): $(addprefix $(OBJ_DIR)/, $(OBJECTS))
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(TEST_DIR)/%: $(TEST_DIR)/%.cpp $(addprefix $(OBJ_DIR)/, wg2sd.o) | $(OBJ_DIR)
+$(TEST_DIR)/%: $(TEST_DIR)/%.cpp $(addprefix $(OBJ_DIR)/, wg2nd.o) | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 $(OBJ_DIR) $(DEBUG_OBJ_DIR):

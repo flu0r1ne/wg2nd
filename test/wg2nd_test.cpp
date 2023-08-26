@@ -1,17 +1,17 @@
 #include "utest.h"
 
-#include "wg2sd.hpp"
+#include "wg2nd.hpp"
 #include <sstream>
 #include <array>
 
-namespace wg2sd {
+namespace wg2nd {
 	extern bool _is_default_route(std::string const & cidr);
 	extern bool _is_ipv4_route(std::string const & cidr);
 };
 
-using namespace wg2sd;
+using namespace wg2nd;
 
-UTEST(wg2sd, ip_helpers) {
+UTEST(wg2nd, ip_helpers) {
 
 	std::array<std::string, 8> default_routes = {
 		"0/0",
@@ -121,7 +121,7 @@ const char * INVALID_CONFIG = (
 );
 
 
-UTEST(wg2sd, parses_config) {
+UTEST(wg2nd, parses_config) {
 
 	// CONFIG1
 	std::istringstream ss { CONFIG1 };
