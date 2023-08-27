@@ -91,7 +91,7 @@ uninstall:
 
 # Clean rule
 clean:
-	rm -rf $(OBJ_DIR) $(DEBUG_OBJ_DIR) $(TARGET) $(TEST_TARGETS) $(C_OBJECTS)
+	rm -rf $(OBJ_DIR) $(DEBUG_OBJ_DIR) $(TARGET) $(TEST_TARGETS) $(C_OBJECTS) $(CMD)
 
 .PHONY: install uninstall all clean targets tests
 

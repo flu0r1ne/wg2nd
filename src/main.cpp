@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0 OR MIT
+
+/*
+ * Copyright (C) 2023 Alex David <flu0r1ne@flu0r1ne.net>
+ */
+
 #include <iostream>
 #include <string>
 #include <vector>
