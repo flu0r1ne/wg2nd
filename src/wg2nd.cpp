@@ -5,71 +5,45 @@
 #include <random>
 #include <regex>
 
-#include <argon2.h>
 #include <string_view>
 
-std::string hashed_keyfile_name(std::string const & priv_key) {
-	constexpr uint8_t const SALT[] = {
-		0x1, 0x6, 0x1, 0x5, 0x5, 0x8, 0x3, 0xd, 0x2, 0x7,
-		0x5, 0xc, 0x8, 0x8, 0x7, 0x2, 0x7, 0xa, 0xf, 0x5,
-		0xa, 0x6, 0xc, 0x5, 0xf, 0xe, 0x6, 0x7, 0xf, 0xd,
-		0x1, 0x5
-	};
+#include "crypto/pubkey.hpp"
 
-	uint8_t const * key = reinterpret_cast<uint8_t const *>(priv_key.c_str());
-	uint32_t keylen = priv_key.size();
-
-	uint8_t t_cost = 2; // 2-pass computation
-	uint32_t m_cost = 1 << 17; // 128 mebibytes memory
-	uint32_t parallelism = 1; // single thread
-
-	constexpr size_t HASHLEN = 32;
-
-	uint8_t hash[HASHLEN];
-
-	argon2id_hash_raw(t_cost, m_cost, parallelism, key, keylen, SALT, sizeof(SALT), hash, HASHLEN);
-
-	constexpr char KEYFILE_EXT[] = ".keyfile";
-
-	char filename[HASHLEN + sizeof(KEYFILE_EXT)];
-
-	constexpr char const HEX[] = "0123456789abcdefghijklmnopqrstuv";
-
-	for(size_t i = 0; i < HASHLEN; i++) {
-		filename[i] = HEX[hash[i] & 0x1F];
-	}
-
-	// copy null terminator
-	for(size_t i = 0; i < sizeof(KEYFILE_EXT); i++) {
-		filename[HASHLEN + i] = KEYFILE_EXT[i];
-	}
-
-	return std::string { filename } ;
+extern "C" {
+	#include "crypto/halfsiphash.h"
 }
 
-uint32_t deterministic_fwmark(std::string const & interface_name) {
-	constexpr uint8_t const SALT[] = {
-		0x90, 0x08, 0x82, 0xd7, 0x75, 0x68, 0xf4, 0x8e,
-		0x90, 0x74, 0x0c, 0x74, 0x0d, 0xf4, 0xfb, 0x91,
-		0xe5, 0x44, 0x87, 0x7e, 0xce, 0x48, 0xcf, 0x01,
-	};
-
-	uint8_t const * key = reinterpret_cast<uint8_t const *>(interface_name.c_str());
-	uint32_t keylen = interface_name.size();
-
-	uint32_t mark;
-
-	uint8_t t_cost = 2;
-	uint32_t m_cost = 1 << 10;
-	uint32_t parallelism = 1;
-
-	argon2id_hash_raw(t_cost, m_cost, parallelism, key, keylen, SALT, sizeof(SALT), &mark, sizeof(mark));
-
-	return mark;
-}
+constexpr char const * PRIVATE_KEY_SUFFIX = ".privkey";
+constexpr char const * SYMMETRIC_KEY_SUFFIX = ".symkey";
 
 
 namespace wg2nd {
+	std::string private_keyfile_name(std::string const & priv_key) {
+		char pub_key[WG_KEY_LEN_BASE64];
+
+		// Derive public key
+		if(wg_pubkey_base64(priv_key.c_str(), pub_key)) {
+				throw ParsingException("Private key is formatted improperly");
+		}
+
+		std::string keyfile_name { pub_key };
+		keyfile_name.append(PRIVATE_KEY_SUFFIX);
+
+		return keyfile_name;
+	}
+
+	uint32_t deterministic_fwmark(std::string const & interface_name) {
+		constexpr uint8_t const SIP_KEY[8] = {
+			0x90, 0x08, 0x82, 0xd7,
+			0x75, 0x68, 0xf4, 0x8e,
+		};
+
+		uint32_t mark;
+
+		halfsiphash(interface_name.c_str(), interface_name.size(), SIP_KEY, (uint8_t *) &mark, sizeof(mark));
+
+		return mark;
+	}
 
 	std::string interface_name_from_filename(std::filesystem::path config_path) {
 		std::string interface_name = config_path.filename().string();
@@ -429,7 +403,7 @@ namespace wg2nd {
 			}
 
 			if(!peer.preshared_key.empty()) {
-				std::string filename = hashed_keyfile_name(peer.preshared_key);
+				std::string filename = peer.public_key + SYMMETRIC_KEY_SUFFIX;
 
 				symmetric_keyfiles.push_back(SystemdFilespec {
 					.name = filename,
@@ -582,7 +556,7 @@ namespace wg2nd {
 		if(keyfile_or_output_path.has_filename()) {
 			keyfile_path = keyfile_or_output_path;
 		} else {
-			std::string private_keyfile = hashed_keyfile_name(cfg.intf.private_key);
+			std::string private_keyfile = private_keyfile_name(cfg.intf.private_key);
 			keyfile_path = keyfile_or_output_path / private_keyfile;
 		}
 

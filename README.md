@@ -41,7 +41,7 @@ To install `wg2nd`, please follow the instructions below based on your distribut
 ### Ubuntu/Debian
 
 ```bash
-sudo apt install build-essential libargon2-dev
+sudo apt install build-essential
 make
 sudo make install
 ```
@@ -49,7 +49,7 @@ sudo make install
 ### Arch Linux
 
 ```bash
-sudo pacman -S argon2 make gcc
+sudo pacman -S make gcc
 make
 sudo make install
 ```

@@ -8,20 +8,29 @@ endif
 
 # Compiler
 CXX = g++
+CC = gcc
+
+CFLAGS = -Wall -Wextra -Werror -Wno-unused-function
+CFLAGS += -Isrc
 
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -Werror
-CXXFLAGS += -Isrc -std=c++20 -Wno-unused-function
+CXXFLAGS = $(CFLAGS)
+CXXFLAGS += -std=c++20
 
 # Release flags
-RELEASE_CXXFLAGS = -O3
+RELEASE_FLAGS = -O3
 RELEASE_LDFLAGS = -lrt
 
 # Debug flags
 DEBUGFLAGS = -ggdb -O0
 
 # Linking flags
-LDFLAGS = -largon2
+LDFLAGS =
+
+C_OBJECTS := src/crypto/encoding.o
+C_OBJECTS += src/crypto/curve25519.o
+C_OBJECTS += src/crypto/halfsiphash.o
+C_OBJECTS += src/crypto/pubkey.o
 
 # Object files
 OBJECTS := wg2nd.o
@@ -44,7 +53,8 @@ DEBUG_OBJ_DIR = obj/debug
 CMD = wg2nd
 
 # Build rules
-all: CXXFLAGS += $(RELEASE_CXXFLAGS)
+all: CXXFLAGS += $(RELEASE_FLAGS)
+all: CFLAGS += $(RELEASE_FLAGS)
 all: LDFLAGS += $(RELEASE_LDFLAGS)
 all: targets
 
@@ -56,11 +66,15 @@ debug: CXXFLAGS += $(DEBUGFLAGS)
 debug: OBJ_DIR = $(DEBUG_OBJ_DIR)
 debug: tests targets
 
-$(CMD): $(addprefix $(OBJ_DIR)/, $(OBJECTS))
+$(CMD): $(addprefix $(OBJ_DIR)/, $(OBJECTS)) $(C_OBJECTS)
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(C_OBJECTS): %.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 $(TEST_DIR)/%: $(TEST_DIR)/%.cpp $(addprefix $(OBJ_DIR)/, wg2nd.o) | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
@@ -77,7 +91,7 @@ uninstall:
 
 # Clean rule
 clean:
-	rm -rf $(OBJ_DIR) $(DEBUG_OBJ_DIR) $(TARGET) $(TEST_TARGETS)
+	rm -rf $(OBJ_DIR) $(DEBUG_OBJ_DIR) $(TARGET) $(TEST_TARGETS) $(C_OBJECTS)
 
 .PHONY: install uninstall all clean targets tests
 
