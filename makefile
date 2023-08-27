@@ -22,7 +22,7 @@ RELEASE_FLAGS = -O3
 RELEASE_LDFLAGS = -lrt
 
 # Debug flags
-DEBUGFLAGS = -ggdb -O0
+DEBUGFLAGS = -ggdb -O0 -fsanitize=address -fno-omit-frame-pointer
 
 # Linking flags
 LDFLAGS =
@@ -33,8 +33,7 @@ C_OBJECTS += src/crypto/halfsiphash.o
 C_OBJECTS += src/crypto/pubkey.o
 
 # Object files
-OBJECTS := wg2nd.o
-OBJECTS += main.o
+OBJECTS := src/wg2nd.o
 
 # Source directory
 SRC_DIR = src
@@ -44,10 +43,6 @@ TEST_FILES := $(wildcard $(TEST_DIR)/*.cpp)
 TEST_TARGETS := $(patsubst $(TEST_DIR)/%.cpp, $(TEST_DIR)/%, $(TEST_FILES))
 
 SRC_FILES := $(patsubst %.o,$(SRC_DIR)/%.cpp,$(OBJECTS))
-
-# Object directory
-OBJ_DIR = obj
-DEBUG_OBJ_DIR = obj/debug
 
 # Target executable
 CMD = wg2nd
@@ -63,24 +58,20 @@ targets: $(CMD)
 tests: $(TEST_TARGETS)
 
 debug: CXXFLAGS += $(DEBUGFLAGS)
-debug: OBJ_DIR = $(DEBUG_OBJ_DIR)
+debug: CFLAGS += $(DEBUGFLAGS)
 debug: tests targets
 
-$(CMD): $(addprefix $(OBJ_DIR)/, $(OBJECTS)) $(C_OBJECTS)
+$(CMD): $(OBJECTS) $(C_OBJECTS) src/main.cpp
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+$(OBJECTS): %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(C_OBJECTS): %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-
-$(TEST_DIR)/%: $(TEST_DIR)/%.cpp $(addprefix $(OBJ_DIR)/, wg2nd.o) | $(OBJ_DIR)
+$(TEST_DIR)/%: $(TEST_DIR)/%.cpp $(OBJECTS) $(C_OBJECTS)
 	$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
-
-$(OBJ_DIR) $(DEBUG_OBJ_DIR):
-	mkdir -p $@
 
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)$(BINDIR)/
@@ -91,7 +82,7 @@ uninstall:
 
 # Clean rule
 clean:
-	rm -rf $(OBJ_DIR) $(DEBUG_OBJ_DIR) $(TARGET) $(TEST_TARGETS) $(C_OBJECTS) $(CMD)
+	rm -rf $(TARGET) $(TEST_TARGETS) $(C_OBJECTS) $(OBJECTS) $(CMD)
 
 .PHONY: install uninstall all clean targets tests
 
