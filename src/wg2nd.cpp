@@ -25,15 +25,28 @@ constexpr char const * SYMMETRIC_KEY_SUFFIX = ".symkey";
 
 namespace wg2nd {
 	std::string private_keyfile_name(std::string const & priv_key) {
-		char pub_key[WG_KEY_LEN_BASE64];
+		char pub_key[WG_KEY_LEN_BASE32];
 
 		// Derive public key
-		if(wg_pubkey_base64(priv_key.c_str(), pub_key)) {
-				throw ParsingException("Private key is formatted improperly");
+		if(wg_pubkey_base32(priv_key.c_str(), pub_key)) {
+			throw ParsingException("Private key is formatted improperly");
 		}
 
 		std::string keyfile_name { pub_key };
 		keyfile_name.append(PRIVATE_KEY_SUFFIX);
+
+		return keyfile_name;
+	}
+
+	std::string public_keyfile_name(std::string const & pub_key) {
+		char pub_key32[WG_KEY_LEN_BASE32];
+
+		if(wg_key_convert_base32(pub_key.c_str(), pub_key32)) {
+			throw ParsingException("Public key for [Peer] " + pub_key + " is formatted improperly");
+		}
+
+		std::string keyfile_name { pub_key32 };
+		keyfile_name.append(SYMMETRIC_KEY_SUFFIX);
 
 		return keyfile_name;
 	}
@@ -409,7 +422,7 @@ namespace wg2nd {
 			}
 
 			if(!peer.preshared_key.empty()) {
-				std::string filename = peer.public_key + SYMMETRIC_KEY_SUFFIX;
+				std::string filename = public_keyfile_name(peer.public_key);
 
 				symmetric_keyfiles.push_back(SystemdFilespec {
 					.name = filename,

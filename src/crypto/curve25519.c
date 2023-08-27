@@ -79,7 +79,9 @@ static noinline void memzero_explicit(void *s, size_t count)
 	asm volatile("": :"r"(s) : "memory");
 }
 
-#ifdef __SIZEOF_INT128__
+#ifdef __EMSCRIPTEN__
+#include "curve25519-fiat32.h"
+#elif __SIZEOF_INT128__
 #include "curve25519-hacl64.h"
 #else
 #include "curve25519-fiat32.h"
