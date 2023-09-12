@@ -4,6 +4,8 @@
  * Copyright (C) 2023 Alex David <flu0r1ne@flu0r1ne.net>
  */
 
+#include "version.hpp"
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -94,12 +96,14 @@ constexpr char const * DEFAULT_OUTPUT_PATH = "/etc/systemd/network/";
  */
 
 void die_usage(const char *prog) {
-	err("Usage: %s { install, generate } [ OPTIONS ] { -h, CONFIG_FILE }", prog);
+	err("Usage: %s {  install, generate } [ OPTIONS ] { -h, CONFIG_FILE }", prog);
+	err("Usage: %s version", prog);
 	die("Use -h for help");
 }
 
 void print_help(const char *prog) {
-	err("Usage: %s { install, generate } [ OPTIONS ] { -h, CONFIG_FILE }\n", prog);
+	err("Usage: %s { install, generate } [ OPTIONS ] { -h, CONFIG_FILE }", prog);
+	err("Usage: %s version\n", prog);
 	err("  CONFIG_FILE is the complete path to a WireGuard configuration file, used by");
 	err("  `wg-quick`. `wg2nd` will convert the WireGuard configuration to networkd");
 	err("  files.\n");
@@ -437,6 +441,8 @@ int main(int argc, char **argv) {
 		return wg2nd_generate(prog, argc - 1, argv + 1);
 	} else if (action == "install") {
 		return wg2nd_install(prog, argc - 1, argv + 1);
+	} else if (action == "version") {
+		printf("%s\n", VERSION);
 	} else if (action == "-h" || action == "--help") {
 		print_help(prog);
 	} else {

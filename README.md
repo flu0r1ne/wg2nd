@@ -97,10 +97,12 @@ specific components of the configurations and outputs them to `stdout`. The `ins
 installs the configuration with the appropriate permissions.
 
 ```plaintext
-Usage: ./wg2nd { install, generate } [ OPTIONS ] { -h, CONFIG_FILE }
+Usage: wg2nd { install, generate } [ OPTIONS ] { -h, CONFIG_FILE }
+Usage: wg2nd version
 
-  CONFIG_FILE is the complete path to a WireGuard configuration file used by
-  `wg-quick`. `wg2nd` converts the WireGuard configuration to networkd files.
+  CONFIG_FILE is the complete path to a WireGuard configuration file, used by
+  `wg-quick`. `wg2nd` will convert the WireGuard configuration to networkd
+  files.
 
   The generated configurations are functionally equivalent to `wg-quick(8)`
   with the following exceptions:
@@ -127,7 +129,7 @@ Usage: ./wg2nd { install, generate } [ OPTIONS ] { -h, CONFIG_FILE }
 ```
 
 ```plaintext
-Usage: ./wg2nd install [ -h ] [ -f FILE_NAME ] [ -o OUTPUT_PATH ] CONFIG_FILE
+Usage: wg2nd install [ -h ] [ -f FILE_NAME ] [ -o OUTPUT_PATH ] CONFIG_FILE
 
   `wg2nd install` translates `wg-quick(8)` configuration into corresponding
   `networkd` configuration and installs the resulting files in `OUTPUT_PATH`.
