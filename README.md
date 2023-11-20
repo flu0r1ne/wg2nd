@@ -41,7 +41,7 @@ To install `wg2nd`, please follow the instructions below based on your distribut
 ### Ubuntu/Debian
 
 ```bash
-sudo apt install build-essential
+sudo apt install build-essential libcap-dev
 make
 sudo make install
 ```
@@ -49,7 +49,7 @@ sudo make install
 ### Arch Linux
 
 ```bash
-sudo pacman -S make gcc
+sudo pacman -S make gcc libcap
 make
 sudo make install
 ```
