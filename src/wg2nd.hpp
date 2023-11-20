@@ -17,6 +17,11 @@
 
 namespace wg2nd {
 
+	enum class ActivationPolicy {
+		MANUAL,
+		UP,
+	};
+
 	struct Interface {
 		// File name, or defaults to "wg"
 		std::string name;
@@ -143,11 +148,14 @@ namespace wg2nd {
 	SystemdConfig gen_systemd_config(
 		Config const & cfg,
 		std::filesystem::path const & keyfile_or_output_path,
-		std::optional<std::string> const & filename
+		std::optional<std::string> const & filename,
+		ActivationPolicy activation_policy = ActivationPolicy::MANUAL
 	);
 
 	SystemdConfig wg2nd(std::string const & interface_name, std::istream & stream,
 		std::filesystem::path const & keyfile_or_output_path,
-		std::optional<std::string> const & filename);
+		std::optional<std::string> const & filename,
+		ActivationPolicy activation_policy = ActivationPolicy::MANUAL
+	);
 
 };

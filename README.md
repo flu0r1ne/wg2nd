@@ -80,7 +80,8 @@ wg2nd generate -t nft /etc/wireguard/wg0.conf >> /etc/nftables.conf
 networkctl up wg0
 ```
 
-To enable automatic starting, ensure that the `ActivationPolicy` is removed from the generated `network` configuration.
+To enable automatic starting, use `wg2nd install -a up /etc/wireguard/wg0.conf`. This sets the
+default [activation policy](https://www.freedesktop.org/software/systemd/man/latest/systemd.network.html#ActivationPolicy=) to `up`.
 
 ### Batch Conversion
 
@@ -136,7 +137,7 @@ Usage: wg2nd version
 ```
 
 ```plaintext
-Usage: wg2nd install [ -h ] [ -f FILE_NAME ] [ -o OUTPUT_PATH ] CONFIG_FILE
+Usage: ./wg2nd install [ -h ] [ -a ACTIVATION_POLICY ] [ -f FILE_NAME ] [ -o OUTPUT_PATH ] CONFIG_FILE
 
   `wg2nd install` translates `wg-quick(8)` configuration into corresponding
   `networkd` configuration and installs the resulting files in `OUTPUT_PATH`.
@@ -152,6 +153,10 @@ Usage: wg2nd install [ -h ] [ -f FILE_NAME ] [ -o OUTPUT_PATH ] CONFIG_FILE
   `wg2nd generate -t nft CONFIG_FILE`.
 
 Options:
+  -a ACTIVATION_POLICY
+     manual Require manual activation (default)
+     up     Automatically set the link "up"
+
   -o OUTPUT_PATH  The installation path (default is /etc/systemd/network)
 
   -f FILE_NAME    The base name for the installed configuration files. The
@@ -166,18 +171,21 @@ Options:
 ```
 
 ```plaintext
-Usage: wg2nd generate [ -h ] [ -t { network, netdev, keyfile, nft } ] CONFIG_FILE
-
-`wg2nd generate` translates `wg-quick(8)` configuration into the equivalent
-`systemd-networkd` configuration. The results are printed to `stdout`. Users
-are responsible for installing these files correctly and restricting access privileges.
+Usage: ./wg2nd generate [ -h ] [ -a ACTIVATION_POLICY ] [ -k KEYPATH ] [ -t { network, netdev, keyfile, nft } ] CONFIG_FILE
 
 Options:
-  -t FILE_TYPE
-     network    Generate a Network Configuration File (see systemd.network(8))
-     netdev     Generate a Virtual Device File (see systemd.netdev(8))
-     keyfile    Print the interface's private key
-     nft        Print the netfilter table `nft(8)` installed by `wg-quick(8)`
+  -a ACTIVATION_POLICY
+     manual Require manual activation (default)
+     up     Automatically set the link "up"
 
-  -h            Display this help
+  -t FILE_TYPE
+     network  Generate a Network Configuration File (see systemd.network(8))
+     netdev   Generate a Virtual Device File (see systemd.netdev(8))
+     keyfile  Print the interface's private key
+     nft      Print the netfilter table `nft(8)` installed by `wg-quick(8)`
+
+  -k KEYPATH  Full path to the keyfile (a path relative to /etc/systemd/network is generated
+              if unspecified)
+
+  -h        Print this help
 ```
