@@ -15,6 +15,12 @@
 #include <cstdio>
 #include <getopt.h>
 
+#ifdef HAVE_LIBCAP
+
+#include <sys/capability.h>
+
+#endif /* HAVE_LIBCAP */
+
 // =====================================
 //	 ERROR HANDING - FROM FCUTILS
 // =====================================
@@ -253,7 +259,7 @@ SystemdConfig generate_cfg_or_die(
 	std::filesystem::path const & keyfile_or_output_path,
 	std::optional<std::string> const & filename
 	) {
-	std::fstream cfg_stream { config_path };
+	std::fstream cfg_stream { config_path, std::ios_base::in };
 
 	if(!cfg_stream.is_open()) {
 		die("Failed to open config file %s", config_path.string().c_str());
@@ -421,6 +427,60 @@ static int wg2nd_install(char const * prog, int argc, char **argv) {
 	return 0;
 }
 
+#ifdef HAVE_LIBCAP
+
+// Drop excess capabilities and ensure the process have proper capabilities upfront
+void drop_excess_capabilities(std::vector<cap_value_t> cap_required) {
+
+	cap_t current_cap = cap_get_proc();
+	cap_t wanted_cap = cap_get_proc();
+
+	if(!current_cap || !wanted_cap) {
+		goto die_cap_failure;
+	}
+
+	if(cap_clear(wanted_cap)) {
+		goto die_cap_failure;
+	}
+
+	// Add required capabilities to the wanted set
+	for(cap_value_t cap : cap_required) {
+		cap_flag_value_t is_set;
+
+		// Print nice error message if the user does not have the required permissions
+		if(cap_get_flag(current_cap, cap, CAP_PERMITTED, &is_set)) {
+			goto die_cap_failure;
+		}
+
+		if(is_set != CAP_SET) {
+			char * name = cap_to_name(cap);
+			die("Failed to obtain capability \"%s\": do you need to elevate permissions?", name);
+		}
+
+		if(cap_set_flag(wanted_cap, CAP_PERMITTED, 1, &cap, CAP_SET)) {
+			goto die_cap_failure;
+		}
+
+		if(cap_set_flag(wanted_cap, CAP_EFFECTIVE, 1, &cap, CAP_SET)) {
+			goto die_cap_failure;
+		}
+	}
+
+	if(cap_set_proc(wanted_cap)) {
+		goto die_cap_failure;
+	}
+
+	if(cap_free(wanted_cap) || cap_free(current_cap)) {
+		goto die_cap_failure;
+	}
+
+	return;
+
+die_cap_failure:
+	die_errno("Failed to drop capabilities");
+}
+#endif /* HAVE_LIBCAP */
+
 int main(int argc, char **argv) {
 	char const * prog = "wg2nd";
 
@@ -433,6 +493,17 @@ int main(int argc, char **argv) {
 	}
 
 	std::string action = argv[1];
+
+#ifdef HAVE_LIBCAP
+	std::vector<cap_value_t> required_caps;
+
+	if(action == "install") {
+		required_caps.push_back(CAP_CHOWN);
+		required_caps.push_back(CAP_DAC_OVERRIDE);
+	}
+
+	drop_excess_capabilities(required_caps);
+#endif /* HAVE_LIBCAP */
 
 	if (action == "generate") {
 		return wg2nd_generate(prog, argc - 1, argv + 1);

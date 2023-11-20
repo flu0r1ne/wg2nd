@@ -12,6 +12,7 @@ CC = gcc
 
 CFLAGS = -Wall -Wextra -Werror -Wno-unused-function
 CFLAGS += -Isrc
+CFLAGS += -DHAVE_LIBCAP
 
 # Compiler flags
 CXXFLAGS = $(CFLAGS)
@@ -25,7 +26,7 @@ RELEASE_LDFLAGS = -lrt
 DEBUGFLAGS = -ggdb -O0 -fsanitize=address -fno-omit-frame-pointer
 
 # Linking flags
-LDFLAGS =
+LDFLAGS = -lcap
 
 C_OBJECTS := src/crypto/encoding.o
 C_OBJECTS += src/crypto/curve25519.o
