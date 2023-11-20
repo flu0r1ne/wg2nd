@@ -54,6 +54,13 @@ make
 sudo make install
 ```
 
+Issues & Contributions
+----------------------
+
+Issues can be reported on the [GitHub mirror](https://github.com/flu0r1ne/wg2nd). Pull requests are welcome
+and can be submitted on [GitHub](https://github.com/flu0r1ne/wg2nd). Alternatively, you can send patches via
+[email](mailto:flu0r1ne@flu0r1ne.net). If you contribute, your name will be added to the contributors list.
+
 Example Usage
 -------------
 

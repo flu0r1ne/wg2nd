@@ -421,9 +421,6 @@ static int wg2nd_install(char const * prog, int argc, char **argv) {
 	return 0;
 }
 
-// The main function remains the same as before
-
-
 int main(int argc, char **argv) {
 	char const * prog = "wg2nd";
 
