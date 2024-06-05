@@ -128,7 +128,7 @@ namespace wg2nd {
 			{
 				size_t i = 0, j = 0;
 				for(; i < line.size(); i++) {
-					if(line[i] != ' ' and line[i] != '\t') {
+					if(line[i] != ' ' and line[i] != '\t' and line[i] != '\r') {
 						line[j] = line[i];
 						j++;
 					}
